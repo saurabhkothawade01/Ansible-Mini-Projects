@@ -1,0 +1,47 @@
+---
+- name: Deploy and start Apache HTTPD service
+  hosts: web
+  vars:
+    web_pkg: httpd
+    web_service: httpd
+  tasks:
+  - name: Required packages are installed and up to date
+    ansible.builtin.package:
+      name: "{{ web_pkg }}"
+      state: latest
+
+  - name: The {{ web_service }} service is started and enabled
+    ansible.builtin.service:
+      name: "{{ web_service }}"
+      enabled: true
+      state: started
+
+  - name: Web content is in place
+    ansible.builtin.copy:
+      content: "Welcome to the Ansible Playbook!\n"
+      dest: /var/www/html/index.html
+
+- name: Configure Haproxy Load Balancer
+  hosts: load
+  vars:
+    package_name: haproxy
+    lb_conf_file: local_lb.conf.j2
+    dest_lb_conf_loc: /etc/haproxy/haproxy.cfg
+  tasks:
+  - name: Install HAProxy Package
+    ansible.builtin.package:
+      name: "{{ package_name }}"
+      state: present
+
+  - name: Configure HAProxy
+    ansible.builtin.template:
+      src: "{{ lb_conf_file }}"
+      dest: "{{ dest_lb_conf_loc }}"
+    notify:
+      - Restart haproxy
+
+  handlers:
+  - name: Restart haproxy
+    ansible.builtin.service:
+      name: "{{ package_name }}"
+      state: restarted
