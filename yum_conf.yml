@@ -1,0 +1,23 @@
+---
+- name: "Configure Yum Repository"
+  hosts: localhost
+  vars:
+    repo_file_name: test
+    repo_name1: dvd1
+    repo_name2: dvd2
+  tasks:
+  - name: "Add first repo"
+    ansible.builtin.yum_repository:
+      name: "{{ repo_name1 }}"
+      description: YUM repo1
+      file: "{{ repo_file_name }}"
+      baseurl: file:///run/media/root/RHEL-9-0-0-BaseOS-x86_64/AppStream
+      gpgcheck: no
+
+  - name: "Add sec repo"
+    ansible.builtin.yum_repository:
+      name: "{{ repo_name2 }}"
+      description: YUM repo2
+      file: "{{ repo_file_name }}"
+      baseurl: file:///run/media/root/RHEL-9-0-0-BaseOS-x86_64/BaseOS
+      gpgcheck: no
