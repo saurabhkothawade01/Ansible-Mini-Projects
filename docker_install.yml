@@ -1,0 +1,26 @@
+---
+- name: Install and Configure Docker on Red Hat
+  hosts: localhost
+  vars:
+    yum_conf_pkg: yum-utils
+    docker_pkg: docker-ce
+    docker_svc: docker
+  tasks:
+  - name: Install required packages for yum repository management
+    ansible.builtin.package:
+      name: "{{ yum_conf_pkg }}"
+      state: present
+
+  - name: Add Docker repository
+    command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+  - name: Install Docker
+    ansible.builtin.package:
+      name: "{{ docker_pkg }}"
+      state: present
+
+  - name: Start and enable Docker service
+    ansible.builtin.service:
+      name: "{{ docker_svc }}"
+      state: started
+      enabled: yes
