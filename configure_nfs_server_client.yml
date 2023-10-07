@@ -1,0 +1,73 @@
+---
+- name: Configure NFS Server
+  hosts: server
+  gather_facts: false
+
+  vars:
+    nfs_pkg: nfs-utils
+    nfs_svc: nfs-server
+    firewall_pkg: firewalld
+    firewall_service: firewalld
+
+  tasks:
+
+    - name: Install {{ nfs_pkg }} package
+      ansible.builtin.dnf:
+        name:
+          - "{{ nfs_pkg }}"
+          - "{{ firewall_pkg }}"
+        state: present
+
+    - name: Create folder
+      ansible.builtin.file:
+        path: /fold2
+        state: directory
+
+    - name: Register Client
+      notify: Restart "{{ nfs_svc }}" service
+      ansible.builtin.copy:
+        content: /fold2 35.154.225.151(rw,no_root_squash)
+        dest: /etc/exports
+
+    - name: Start "{{ nfs_svc }}" service
+      ansible.builtin.service:
+        name: "{{ nfs_svc }}"
+        state: started
+
+    - name: The {{ firewall_service }} service is started and enabled
+      ansible.builtin.service:
+        name: "{{ firewall_service }}"
+        enabled: true
+        state: started
+
+    - name: permit traffic for nfs-server service
+      ansible.posix.firewalld:
+        service: nfs
+        permanent: true
+        state: enabled
+
+  handlers:
+
+    - name: Restart "{{ nfs_svc }}" service
+      ansible.builtin.service:
+        name: "{{ nfs_svc }}"
+        state: restarted
+
+
+- name: Configure NFS client
+  hosts: client
+  gather_facts: false
+
+  tasks:
+
+    - name: Create folder for mounting
+      ansible.builtin.file:
+        path: /newdata
+        state: directory
+
+    - name: Mount
+      ansible.posix.mount:
+        path: /newdata
+        src: 13.233.160.53:/fold2
+        fstype: ext4
+        state: present
