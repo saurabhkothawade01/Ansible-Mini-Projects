@@ -1,0 +1,43 @@
+---
+- name: Setup and Customize Apache Web Server
+  hosts: web
+  vars:
+    web_pkg: httpd
+    web_service: httpd
+    cust_doc_root: /var/www/test
+  tasks:
+  - name: Install Apache package
+    ansible.builtin.package:
+      name: "{{ web_pkg }}"
+      state: latest
+
+  - name: Start Apache service
+    ansible.builtin.service:
+      name: "{{ web_service }}"
+      state: started
+
+  - name: Create Customize Document Root folder
+    ansible.builtin.file:
+      path: "{{ cust_doc_root }}"
+      state: directory
+
+  - name: Customize Apache Web Server
+    ansible.builtin.copy:
+      src: test.conf
+      dest: /etc/httpd/conf.d/
+    notify:
+      - Restart Apache Web Server
+      - Permit Traffic in Default Zone on Port 8080/tcp
+
+  handlers:
+  - name: Restart Apache Web Server
+    ansible.builtin.service:
+      name: "{{ web_service }}"
+      state: restarted
+
+  - name: Permit Traffic in Default Zone on Port 8080/tcp
+    ansible.posix.firewalld:
+      port: 8080/tcp
+      permanent: true
+      immediate: yes
+      state: enabled
