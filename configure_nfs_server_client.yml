@@ -11,7 +11,7 @@
 
   tasks:
 
-    - name: Install {{ nfs_pkg }} package
+    - name: Install required package
       ansible.builtin.dnf:
         name:
           - "{{ nfs_pkg }}"
@@ -56,9 +56,16 @@
 
 - name: Configure NFS client
   hosts: client
+  vars:
+    nfs_pkg: nfs-utils
   gather_facts: false
 
   tasks:
+  
+    - name: Install {{ nfs_pkg }} package
+      ansible.builtin.dnf:
+        name: "{{ nfs_pkg }}"
+        state: present
 
     - name: Create folder for mounting
       ansible.builtin.file:
